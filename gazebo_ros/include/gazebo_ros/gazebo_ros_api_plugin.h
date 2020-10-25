@@ -76,6 +76,8 @@
 #include "gazebo_msgs/GetLightProperties.h"
 #include "gazebo_msgs/SetLightProperties.h"
 
+#include "gazebo_msgs/StepControl.h"
+
 // Topics
 #include "gazebo_msgs/ModelState.h"
 #include "gazebo_msgs/LinkState.h"
@@ -234,6 +236,9 @@ public:
   /// \brief
   bool applyBodyWrench(gazebo_msgs::ApplyBodyWrench::Request &req,gazebo_msgs::ApplyBodyWrench::Response &res);
 
+  /// \brief For one-step-simulation iteration
+  bool stepControl(gazebo_msgs::StepControl::Request &req, gazebo_msgs::StepControl::Response &res);
+
 private:
 
   /// \brief
@@ -329,6 +334,7 @@ private:
   gazebo::transport::SubscriberPtr performance_metric_sub_;
   gazebo::transport::PublisherPtr request_pub_;
   gazebo::transport::SubscriberPtr response_sub_;
+  gazebo::transport::PublisherPtr step_publisher_;
 
   boost::shared_ptr<ros::NodeHandle> nh_;
   ros::CallbackQueue gazebo_queue_;
@@ -369,6 +375,7 @@ private:
   ros::ServiceServer unpause_physics_service_;
   ros::ServiceServer clear_joint_forces_service_;
   ros::ServiceServer clear_body_wrenches_service_;
+  ros::ServiceServer step_control_service_;
   ros::Subscriber    set_link_state_topic_;
   ros::Subscriber    set_model_state_topic_;
   ros::Publisher     pub_link_states_;

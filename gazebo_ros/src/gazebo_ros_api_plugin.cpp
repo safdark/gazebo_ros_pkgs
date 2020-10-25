@@ -192,6 +192,8 @@ void GazeboRosApiPlugin::loadGazeboRosApiPlugin(std::string world_name)
   light_modify_pub_ = gazebonode_->Advertise<gazebo::msgs::Light>("~/light/modify");
   request_pub_ = gazebonode_->Advertise<gazebo::msgs::Request>("~/request");
   response_sub_ = gazebonode_->Subscribe("~/response",&GazeboRosApiPlugin::onResponse, this);
+  step_publisher_ = gazebonode_->Advertise<gazebo::msgs::WorldControl>("~/world_control");
+
 #if (GAZEBO_MAJOR_VERSION == 11 && GAZEBO_MINOR_VERSION > 1) || (GAZEBO_MAJOR_VERSION == 9 && GAZEBO_MINOR_VERSION > 14)
   performance_metric_sub_ = gazebonode_->Subscribe("/gazebo/performance_metrics",
     &GazeboRosApiPlugin::onPerformanceMetrics, this);
@@ -555,6 +557,16 @@ void GazeboRosApiPlugin::advertiseServices()
                                                           boost::bind(&GazeboRosApiPlugin::resetWorld,this,_1,_2),
                                                           ros::VoidPtr(), &gazebo_queue_);
   reset_world_service_ = nh_->advertiseService(reset_world_aso);
+
+  // Advertise step control service (for one-step simulation)
+  std::string step_control_service_name("step_control");
+  ros::AdvertiseServiceOptions step_control_aso =
+    ros::AdvertiseServiceOptions::create<gazebo_msgs::StepControl>(
+                                                            step_control_service_name,
+                                                            boost::bind(&GazeboRosApiPlugin::stepControl,this,_1,_2),
+                                                            ros::VoidPtr(), &gazebo_queue_);
+  step_control_service_ = nh_->advertiseService(step_control_aso);
+
 }
 
 void GazeboRosApiPlugin::onLinkStatesConnect()
@@ -592,6 +604,20 @@ void GazeboRosApiPlugin::onModelStatesDisconnect()
       ROS_ERROR_NAMED("api_plugin", "One too mandy disconnect from pub_model_states_ in gazebo_ros.cpp? something weird");
   }
 }
+
+bool GazeboRosApiPlugin::stepControl(gazebo_msgs::StepControl::Request &req,
+                                     gazebo_msgs::StepControl::Response &res)
+{
+  gazebo::msgs::WorldControl step_msg;
+  step_msg.set_pause(req.pause);
+  step_msg.set_step(req.step);
+  step_msg.set_multi_step(req.multi_step);
+  step_publisher_->Publish(step_msg);
+  res.success = true;
+  ROS_DEBUG_NAMED("api_plugin", "Issued step control request...");
+  return true;
+}
+
 
 bool GazeboRosApiPlugin::spawnURDFModel(gazebo_msgs::SpawnModel::Request &req,
                                         gazebo_msgs::SpawnModel::Response &res)

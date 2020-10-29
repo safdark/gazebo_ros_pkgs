@@ -5,6 +5,7 @@ option(ENABLE_DISPLAY_TESTS "Enable the building of tests that requires a displa
 
 find_package(catkin REQUIRED COMPONENTS
   gazebo_dev
+  gazebo_ros
   message_generation
   gazebo_msgs
   roscpp

@@ -54,6 +54,9 @@ catkin_package(
     gazebo_ros_api_plugin
     gazebo_ros_paths_plugin
 
+  INCLUDE_DIRS
+    include
+
   CATKIN_DEPENDS
     roslib
     roscpp

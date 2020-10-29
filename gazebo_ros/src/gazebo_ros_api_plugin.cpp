@@ -32,7 +32,6 @@ namespace gazebo
 GazeboRosApiPlugin::GazeboRosApiPlugin() :
   physics_reconfigure_initialized_(false),
   world_created_(false),
-  stop_(false),
   plugin_loaded_(false),
   pub_link_states_connection_count_(0),
   pub_model_states_connection_count_(0),
@@ -70,18 +69,6 @@ GazeboRosApiPlugin::~GazeboRosApiPlugin()
     pub_model_states_event_.reset();
   ROS_DEBUG_STREAM_NAMED("api_plugin","Disconnected World Updates");
 
-  // Stop the multi threaded ROS spinner
-  async_ros_spin_->stop();
-  ROS_DEBUG_STREAM_NAMED("api_plugin","Async ROS Spin Stopped");
-
-  // Shutdown the ROS node
-  nh_->shutdown();
-  ROS_DEBUG_STREAM_NAMED("api_plugin","Node Handle Shutdown");
-
-  // Shutdown ROS queue
-  gazebo_callback_queue_thread_->join();
-  ROS_DEBUG_STREAM_NAMED("api_plugin","Callback Queue Joined");
-
   // Physics Dynamic Reconfigure
   physics_reconfigure_thread_->join();
   ROS_DEBUG_STREAM_NAMED("api_plugin","Physics reconfigure joined");
@@ -107,48 +94,12 @@ GazeboRosApiPlugin::~GazeboRosApiPlugin()
   ROS_DEBUG_STREAM_NAMED("api_plugin","Unloaded");
 }
 
-void GazeboRosApiPlugin::shutdownSignal()
-{
-  ROS_DEBUG_STREAM_NAMED("api_plugin","shutdownSignal() recieved");
-  stop_ = true;
-}
-
 void GazeboRosApiPlugin::Load(int argc, char** argv)
 {
   ROS_DEBUG_STREAM_NAMED("api_plugin","Load");
 
-  // connect to sigint event
-  sigint_event_ = gazebo::event::Events::ConnectSigInt(boost::bind(&GazeboRosApiPlugin::shutdownSignal,this));
-
-  // setup ros related
-  if (!ros::isInitialized())
-    ros::init(argc,argv,"gazebo",ros::init_options::NoSigintHandler);
-  else
-    ROS_ERROR_NAMED("api_plugin", "Something other than this gazebo_ros_api plugin started ros::init(...), command line arguments may not be parsed properly.");
-
-  // check if the ros master is available - required
-  while(!ros::master::check())
-  {
-    ROS_WARN_STREAM_NAMED("api_plugin","No ROS master - start roscore to continue...");
-    // wait 0.5 second
-    // can't use ROS Time here b/c node handle is not yet initialized
-    std::this_thread::sleep_for(std::chrono::microseconds(500*1000));
-
-    if(stop_)
-    {
-      ROS_WARN_STREAM_NAMED("api_plugin","Canceled loading Gazebo ROS API plugin by sigint event");
-      return;
-    }
-  }
-
-  nh_.reset(new ros::NodeHandle("~")); // advertise topics and services in this node's namespace
-
-  // Built-in multi-threaded ROS spinning
-  async_ros_spin_.reset(new ros::AsyncSpinner(0)); // will use a thread for each CPU core
-  async_ros_spin_->start();
-
-  /// \brief setup custom callback queue
-  gazebo_callback_queue_thread_.reset(new boost::thread( &GazeboRosApiPlugin::gazeboQueueThread, this) );
+  // Load the ROS server
+  ROSServer::Load(argc, argv);
 
   /// \brief start a thread for the physics dynamic reconfigure node
   physics_reconfigure_thread_.reset(new boost::thread(boost::bind(&GazeboRosApiPlugin::physicsReconfigureThread, this)));
@@ -257,15 +208,6 @@ void GazeboRosApiPlugin::onPerformanceMetrics(const boost::shared_ptr<gazebo::ms
   pub_performance_metrics_.publish(msg_ros);
 }
 #endif
-
-void GazeboRosApiPlugin::gazeboQueueThread()
-{
-  static const double timeout = 0.001;
-  while (nh_->ok())
-  {
-    gazebo_queue_.callAvailable(ros::WallDuration(timeout));
-  }
-}
 
 void GazeboRosApiPlugin::advertiseServices()
 {

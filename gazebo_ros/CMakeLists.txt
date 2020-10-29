@@ -88,7 +88,7 @@ foreach (item ${GAZEBO_LDFLAGS})
 endforeach ()
 
 ## Plugins
-add_library(gazebo_ros_api_plugin src/gazebo_ros_api_plugin.cpp)
+add_library(gazebo_ros_api_plugin src/gazebo_ros_api_plugin.cpp src/ros_server.cpp)
 add_dependencies(gazebo_ros_api_plugin ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 set_target_properties(gazebo_ros_api_plugin PROPERTIES LINK_FLAGS "${ld_flags}")
 set_target_properties(gazebo_ros_api_plugin PROPERTIES COMPILE_FLAGS "${cxx_flags}")

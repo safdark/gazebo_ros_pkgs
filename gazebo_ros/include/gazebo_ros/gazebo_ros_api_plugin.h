@@ -98,6 +98,7 @@
 // For physics dynamics reconfigure
 #include <dynamic_reconfigure/server.h>
 #include <gazebo_ros/PhysicsConfig.h>
+#include <gazebo_ros/ros_server.h>
 #include "gazebo_msgs/SetPhysicsProperties.h"
 #include "gazebo_msgs/GetPhysicsProperties.h"
 
@@ -107,7 +108,7 @@ namespace gazebo
 {
 
 /// \brief A plugin loaded within the gzserver on startup.
-class GazeboRosApiPlugin : public SystemPlugin
+class GazeboRosApiPlugin : public SystemPlugin, public ROSServer
 {
 public:
   /// \brief Constructor
@@ -116,9 +117,6 @@ public:
   /// \brief Destructor
   ~GazeboRosApiPlugin();
 
-  /// \bried Detect if sig-int shutdown signal is recieved
-  void shutdownSignal();
-
   /// \brief Gazebo-inherited load function
   ///
   /// Called before Gazebo is loaded. Must not block.
@@ -126,9 +124,6 @@ public:
   /// \param _argc Number of command line arguments.
   /// \param _argv Array of command line arguments.
   void Load(int argc, char** argv);
-
-  /// \brief ros queue thread for this node
-  void gazeboQueueThread();
 
   /// \brief advertise services
   void advertiseServices();
@@ -320,10 +315,6 @@ private:
   // track if the desconstructor event needs to occur
   bool plugin_loaded_;
 
-  // detect if sigint event occurs
-  bool stop_;
-  gazebo::event::ConnectionPtr sigint_event_;
-
   std::string robot_namespace_;
 
   gazebo::transport::NodePtr gazebonode_;
@@ -335,10 +326,6 @@ private:
   gazebo::transport::PublisherPtr request_pub_;
   gazebo::transport::SubscriberPtr response_sub_;
   gazebo::transport::PublisherPtr step_publisher_;
-
-  boost::shared_ptr<ros::NodeHandle> nh_;
-  ros::CallbackQueue gazebo_queue_;
-  boost::shared_ptr<boost::thread> gazebo_callback_queue_thread_;
 
   gazebo::physics::WorldPtr world_;
   gazebo::event::ConnectionPtr wrench_update_event_;
@@ -383,9 +370,6 @@ private:
   ros::Publisher     pub_performance_metrics_;
   int                pub_link_states_connection_count_;
   int                pub_model_states_connection_count_;
-
-  // ROS comm
-  boost::shared_ptr<ros::AsyncSpinner> async_ros_spin_;
 
   // physics dynamic reconfigure
   boost::shared_ptr<boost::thread> physics_reconfigure_thread_;

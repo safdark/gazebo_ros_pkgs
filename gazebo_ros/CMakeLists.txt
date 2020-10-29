@@ -51,6 +51,7 @@ generate_dynamic_reconfigure_options(cfg/Physics.cfg)
 
 catkin_package(
   LIBRARIES
+    gazebo_ros_server
     gazebo_ros_api_plugin
     gazebo_ros_paths_plugin
 
@@ -91,11 +92,17 @@ foreach (item ${GAZEBO_LDFLAGS})
 endforeach ()
 
 ## Plugins
+add_library(gazebo_ros_server src/ros_server.cpp)
+add_dependencies(gazebo_ros_server ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+set_target_properties(gazebo_ros_server PROPERTIES LINK_FLAGS "${ld_flags}")
+set_target_properties(gazebo_ros_server PROPERTIES COMPILE_FLAGS "${cxx_flags}")
+target_link_libraries(gazebo_ros_server ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${TinyXML_LIBRARIES})
+
 add_library(gazebo_ros_api_plugin src/gazebo_ros_api_plugin.cpp src/ros_server.cpp)
 add_dependencies(gazebo_ros_api_plugin ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 set_target_properties(gazebo_ros_api_plugin PROPERTIES LINK_FLAGS "${ld_flags}")
 set_target_properties(gazebo_ros_api_plugin PROPERTIES COMPILE_FLAGS "${cxx_flags}")
-target_link_libraries(gazebo_ros_api_plugin ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${TinyXML_LIBRARIES})
+target_link_libraries(gazebo_ros_api_plugin gazebo_ros_server ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${TinyXML_LIBRARIES})
 
 add_library(gazebo_ros_paths_plugin src/gazebo_ros_paths_plugin.cpp)
 add_dependencies(gazebo_ros_paths_plugin ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
@@ -108,7 +115,7 @@ target_link_libraries(gazebo_ros_paths_plugin ${catkin_LIBRARIES} ${Boost_LIBRAR
 add_subdirectory(test)
 
 # Install Gazebo System Plugins
-install(TARGETS gazebo_ros_api_plugin gazebo_ros_paths_plugin
+install(TARGETS gazebo_ros_server gazebo_ros_api_plugin gazebo_ros_paths_plugin
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}

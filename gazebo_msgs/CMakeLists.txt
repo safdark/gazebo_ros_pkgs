@@ -51,6 +51,7 @@ add_service_files(DIRECTORY srv FILES
   GetLightProperties.srv
   SetLightProperties.srv
   StepControl.srv
+  PublishJointStates.srv
   )
 
 generate_messages(DEPENDENCIES

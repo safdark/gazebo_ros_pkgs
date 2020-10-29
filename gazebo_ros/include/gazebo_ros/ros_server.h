@@ -26,6 +26,7 @@ namespace gazebo {
     class ROSServer {
     public:
         ROSServer();
+        ROSServer(const std::string& robot_namespace);
         virtual void Load(int argc, char** argv);
         virtual ~ROSServer();
 
@@ -36,6 +37,7 @@ namespace gazebo {
         void shutdownSignal();
 
     protected:
+        std::string robot_namespace_;
         boost::shared_ptr<ros::NodeHandle> nh_;
         ros::CallbackQueue gazebo_queue_;
         boost::shared_ptr<boost::thread> gazebo_callback_queue_thread_;

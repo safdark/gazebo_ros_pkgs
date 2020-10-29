@@ -1,3 +1,4 @@
 
 ---
-
+bool success                      # return true if successful
+string status_message             # comments if available

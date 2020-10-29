@@ -7,7 +7,8 @@
 
 namespace gazebo {
 
-    ROSServer::ROSServer() : stop_(false) {}
+    ROSServer::ROSServer() : stop_(false), robot_namespace_("~") {}
+    ROSServer::ROSServer(const std::string& robot_namespace) : stop_(false), robot_namespace_(robot_namespace) {}
 
     void ROSServer::Load(int argc, char** argv) {
         // connect to sigint event
@@ -17,7 +18,7 @@ namespace gazebo {
         if (!ros::isInitialized()) {
             ros::init(argc, argv, "gazebo", ros::init_options::NoSigintHandler);
         } else {
-            ROS_ERROR_NAMED("api_plugin",
+            ROS_WARN_NAMED("api_plugin",
                             "Something other than this gazebo_ros_api plugin started ros::init(...), command line arguments may not be parsed properly.");
         }
 
@@ -36,7 +37,7 @@ namespace gazebo {
             }
         }
 
-        nh_.reset(new ros::NodeHandle("~")); // advertise topics and services in this node's namespace
+        nh_.reset(new ros::NodeHandle(robot_namespace_)); // advertise topics and services in this node's namespace
 
         // Built-in multi-threaded ROS spinning
         async_ros_spin_.reset(new ros::AsyncSpinner(0)); // will use a thread for each CPU core

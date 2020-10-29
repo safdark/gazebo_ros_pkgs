@@ -30,6 +30,7 @@ namespace gazebo
 {
 
 GazeboRosApiPlugin::GazeboRosApiPlugin() :
+  ROSServer("gazebo"),
   physics_reconfigure_initialized_(false),
   world_created_(false),
   plugin_loaded_(false),

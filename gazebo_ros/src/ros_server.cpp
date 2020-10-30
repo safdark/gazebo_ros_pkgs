@@ -7,8 +7,8 @@
 
 namespace gazebo {
 
-    ROSServer::ROSServer() : stop_(false), robot_namespace_("~") {}
-    ROSServer::ROSServer(const std::string& robot_namespace) : stop_(false), robot_namespace_(robot_namespace) {}
+    ROSServer::ROSServer() : stop_(false), node_name_("~") {}
+    ROSServer::ROSServer(const std::string& node_name) : stop_(false), node_name_(node_name) {}
 
     void ROSServer::Load(int argc, char** argv) {
         // connect to sigint event
@@ -37,7 +37,7 @@ namespace gazebo {
             }
         }
 
-        nh_.reset(new ros::NodeHandle(robot_namespace_)); // advertise topics and services in this node's namespace
+        nh_.reset(new ros::NodeHandle(node_name_)); // advertise topics and services in this node's namespace
 
         // Built-in multi-threaded ROS spinning
         async_ros_spin_.reset(new ros::AsyncSpinner(0)); // will use a thread for each CPU core

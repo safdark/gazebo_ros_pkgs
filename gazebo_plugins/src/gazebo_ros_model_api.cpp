@@ -118,7 +118,8 @@ bool GazeboRosModelAPI::PublishJointStates(
         gazebo_msgs::PublishJointStates::Request& req,
         gazebo_msgs::PublishJointStates::Response& res)
 {
-    ros::Time current_time = ros::Time::now();
+    gazebo::common::Time currentTime = world_->SimTime();
+    ros::Time current_time = ros::Time(currentTime.sec, currentTime.nsec);
     const gazebo::physics::Joint_V& joints = this->parent_->GetJoints();
 
     sensor_msgs::JointState joint_state_msg;

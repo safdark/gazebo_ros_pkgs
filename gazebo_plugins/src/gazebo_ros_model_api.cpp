@@ -28,6 +28,8 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/format.hpp>
 
+#include <gazebo/msgs/msgs.hh>
+
 #include <gazebo_plugins/gazebo_ros_model_api.h>
 #ifdef ENABLE_PROFILER
 #include <ignition/common/Profiler.hh>
@@ -126,8 +128,8 @@ bool GazeboRosModelAPI::PublishJointStates(
     joint_state_msg.velocity.resize ( joints.size() );
     for ( int i = 0; i < joints.size(); i++ ) {
         physics::JointPtr joint = joints[i];
-        double velocity = joint->GetVelocity( 0 );
-        double position = joint->Position ( 0 );
+        double velocity = joint->GetMsgType() == gazebo::msgs::Joint::FIXED ? 0.0 : joint->GetVelocity( 0 );
+        double position = joint->GetMsgType() == gazebo::msgs::Joint::FIXED ? 0.0 : joint->Position ( 0 );
         joint_state_msg.name[i] = joint->GetName();
         joint_state_msg.position[i] = position;
         joint_state_msg.velocity[i] = velocity;

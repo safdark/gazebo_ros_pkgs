@@ -127,15 +127,16 @@ bool GazeboRosModelAPI::PublishJointStates(
     joint_state_msg.name.resize ( joints.size() );
     joint_state_msg.position.resize ( joints.size() );
     joint_state_msg.velocity.resize ( joints.size() );
+    joint_state_msg.effort.resize ( joints.size() );
     for ( int i = 0; i < joints.size(); i++ ) {
         physics::JointPtr joint = joints[i];
         double position = joint->GetMsgType() == gazebo::msgs::Joint::FIXED ? 0.0 : joint->Position ( 0 );
         double velocity = joint->GetMsgType() == gazebo::msgs::Joint::FIXED ? 0.0 : joint->GetVelocity( 0 );
-//        double effort = joint->GetMsgType() == gazebo::msgs::Joint::FIXED ? 0.0 : joint->GetForce ( (unsigned int)(0) );
+        double effort = joint->GetMsgType() == gazebo::msgs::Joint::FIXED ? 0.0 : joint->GetForce ( 0 );
         joint_state_msg.name[i] = joint->GetName();
-        joint_state_msg.position[i] = position;
+        joint_state_msg.position[i] = position; // This might need more elaborate calculation, based on teh type of joint
         joint_state_msg.velocity[i] = velocity;
-//        joint_state_msg.effort[i] = effort
+        joint_state_msg.effort[i] = effort;
     }
     joint_state_publisher_.publish ( joint_state_msg );
 
